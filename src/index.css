@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* font */
+* {
+    font-family: "Urbanist", sans-serif;
+}

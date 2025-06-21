@@ -6,7 +6,7 @@ const servicesPromise = fetch("/data/services.json").then(res=>res.json())
 const OurServices = () => {
     const servicesData = use(servicesPromise);
   return (
-    <div className="bg-[#03373D] w-11/12 lg:container mx-auto py-50 px-52 rounded-2xl">
+    <div className="bg-secondary w-11/12 lg:container mx-auto py-4 md:py-20 lg:py-50 px-3  lg:px-52 rounded-2xl">
       <div className="text-center text-white">
         <h2 className="text-4xl font-bold">Our Services</h2>
         <p className="max-w-[718px] mx-auto">

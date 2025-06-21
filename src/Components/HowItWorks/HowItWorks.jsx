@@ -8,9 +8,9 @@ const HowItWorks = () => {
     // console.log(HowItWorksData);
     return (
         <div className='w-11/12 lg:w-7xl mx-auto'>
-            <h3 className='text-3xl font-bold'>How It Works</h3>
+            <h3 className='text-3xl text-secondary font-bold'>How It Works</h3>
 
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-8'>
                 {
                     HowItWorksData.map((data, index)=><HowItWorksCard key={index} data={data}></HowItWorksCard>)
                 }

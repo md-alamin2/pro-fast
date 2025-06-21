@@ -1,0 +1,22 @@
+[
+  {
+    "question": "How does this posture corrector work?",
+    "answer": "The Fresh Reminder is a web app that helps you monitor food items and get alerts before they expire to reduce waste and save money."
+  },
+  {
+    "question": "Is it suitable for all ages and body types?",
+    "answer": "You can add a new item by clicking the 'Add Food' button and filling out details like name, category, quantity, expiry date, and notes."
+  },
+  {
+    "question": "Does it have smart features like vibration alerts?",
+    "answer": "Yes, each item has options to edit its details or delete it completely from your list whenever needed."
+  },
+  {
+    "question": "How does the system notify me before expiry?",
+    "answer": "The app highlights items that are expiring soon or already expired so you can take timely action. Future versions may include notification alerts."
+  },
+  {
+    "question": "How will I be notified when the product is back in stock?",
+    "answer": "Yes, your food data is stored securely and only accessible to you. We prioritize user privacy and data safety."
+  }
+]

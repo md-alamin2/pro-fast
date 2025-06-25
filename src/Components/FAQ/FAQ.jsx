@@ -13,7 +13,7 @@ const FAQ = () => {
       <p className="text-center max-w-2xl mx-auto">Enhance posture, mobility, and well-being effortlessly with Posture Pro. Achieve proper alignment, reduce pain, and strengthen your body with ease!</p>
       <div className="space-y-4 mt-20">
         {faqData.map((item, index) => (
-          <div key={index} className="collapse collapse-arrow bg-base-100 border border-base-300">
+          <div key={index} className="collapse collapse-arrow bg-primary border border-base-300">
             <input type="radio" name="my-accordion-2" />
             <div className="collapse-title font-semibold">
               {item.question}

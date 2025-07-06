@@ -21,6 +21,10 @@
     -moz-appearance: textfield;
 }
 
+.input{
+    outline: none;
+}
+
 /* font */
 * {
     font-family: "Urbanist", sans-serif;

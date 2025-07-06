@@ -1,28 +1,46 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import useAuth from "../../../Hooks/useAuth";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
+import useAxios from "../../../Hooks/useAxios";
 
 const GoogleLogin = () => {
   const { loginWithGoogle, setUser } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const axiosInstance = useAxios();
   const navigate = useNavigate();
-  const location = useLocation()
-    //   google login
+  const location = useLocation();
+  //   google login
   const handleGoogleLogin = () => {
+    setLoading(true);
     loginWithGoogle()
-      .then((result) => {
+      .then(async (result) => {
         const user = result.user;
-        setUser(user);
-        Swal.fire({
-          title: "Login!",
-          text: "User login successfully!",
-          icon: "success",
-          timer: 2000,
-        });
-        navigate(`${location.state ? location.state : "/"}`);
+        // set user on db
+        const userInfo = {
+          email: user.email,
+          role: "user",
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString(),
+        };
+
+        const userRes = await axiosInstance.post("users", userInfo);
+
+        if (userRes.data.modifiedCount) {
+          setLoading(false);
+          Swal.fire({
+            title: "Login!",
+            text: "User login successfully!",
+            icon: "success",
+            timer: 2000,
+          });
+          setUser(user);
+          navigate(`${location.state ? location.state : "/"}`);
+        }
       })
       .catch((error) => {
+        setLoading(false);
         const errorMassage = error.code;
         toast.error(`${errorMassage}`, {
           position: "top-right",
@@ -36,10 +54,14 @@ const GoogleLogin = () => {
         });
       });
   };
-  
+
   return (
     <div className="w-full">
-      <button onClick={handleGoogleLogin} className="btn bg-white text-black border-[#e5e5e5] w-full">
+      <button
+        type="button"
+        onClick={handleGoogleLogin}
+        className="btn bg-white text-black border-[#e5e5e5] w-full"
+      >
         <svg
           aria-label="Google logo"
           width="16"
@@ -67,7 +89,11 @@ const GoogleLogin = () => {
             ></path>
           </g>
         </svg>
-        Login with Google
+        {loading ? (
+          <span className="loading loading-spinner loading-xl"></span>
+        ) : (
+          "Login with Google"
+        )}
       </button>
     </div>
   );

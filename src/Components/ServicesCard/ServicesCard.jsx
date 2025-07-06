@@ -8,7 +8,7 @@ const ServicesCard = ({ data }) => {
         className="max-w-20 mx-auto p-2 bg-gradient-to-b from-base-300 from-60% shadow-2xl rounded-full"
       />
       <div className="text-center mt-4">
-        <h className="text-2xl text-secondary font-bold">{data.title}</h>
+        <h3 className="text-2xl text-secondary font-bold">{data.title}</h3>
         <p className="font-medium mt-4">{data.description}</p>
       </div>
     </div>

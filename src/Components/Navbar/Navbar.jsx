@@ -63,6 +63,16 @@ const Navbar = () => {
               Be a Rider
             </NavLink>
           </li>
+          <li>
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                isActive ? "font-semibold bg-primary" : "font-medium"
+              }
+            >
+              Dashboard
+            </NavLink>
+          </li>
         </>
       )}
     </>

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useLoaderData } from "react-router";
-import axios from "axios";
+import { useLoaderData, useNavigate } from "react-router";
 import Swal from "sweetalert2";
 import useAuth from "../../Hooks/useAuth";
+import useAxiosSecure from "../../Hooks/useAxiosSecure";
 
 const SendParcel = () => {
-  const {user} = useAuth()
+  const { user } = useAuth();
+  const axiosSecure = useAxiosSecure();
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -19,7 +21,6 @@ const SendParcel = () => {
   const senderRegion = watch("senderRegion");
   const receiverRegion = watch("receiverRegion");
 
-  // const [cost, setCost] = useState();
   const [senderCenters, setSenderCenters] = useState([]);
   const [receiverCenters, setReceiverCenters] = useState([]);
 
@@ -43,6 +44,13 @@ const SendParcel = () => {
     const toRegion = data.receiverRegion;
     const weight = parseFloat(data.weight || 0);
     const sameRegion = fromRegion === toRegion;
+
+    // generate tracking id
+    const trackingId =
+      "TRK-" +
+      new Date().toISOString().slice(0, 10).replace(/-/g, "") +
+      "-" +
+      Math.random().toString(36).substring(2, 8).toUpperCase();
 
     let baseRate = 0;
     let extraCharge = 0;
@@ -103,6 +111,12 @@ const SendParcel = () => {
       title: "Review Delivery Cost",
       html: `
         <div style="text-align:left; font-size:15px; padding:10px 0">
+        <p><strong>Tracking ID:</strong> ${trackingId}</p>
+          <p><strong>Sender:</strong> ${data.senderName || "N/A"}, ${
+        data.senderRegion
+      } → ${data.receiverRegion}</p>
+          <p><strong>Receiver:</strong> ${data.receiverName || "N/A"}</p>
+          <hr style="margin:10px 0;" />
           ${breakdown}
           <hr style="margin:10px 0;" />
           <p style="font-size:18px; font-weight:bold; color:#16a34a;">Total Cost: ৳${total.toFixed(
@@ -126,29 +140,29 @@ const SendParcel = () => {
         const parcelData = {
           ...data,
           cost: total,
-          created_by:user.email,
-          paymentStatus:"Not paid",
+          created_by: user.email,
+          paymentStatus: "Not paid",
           delivery_status: "Not Collected",
+          trackingId,
           createdAt: new Date().toISOString(),
         };
-        console.log(parcelData);
 
-        // try {
-        //   const res = await axios.post(
-        //     "https://your-server-endpoint.com/parcels",
-        //     parcelData
-        //   );
-
-        //   if (res.data.insertedId) {
-        //     setCost(total);
-        //     Swal.fire("Success", "Parcel submitted successfully!", "success");
-        //     reset();
-        //   } else {
-        //     Swal.fire("Error", "Failed to submit parcel.", "error");
-        //   }
-        // } catch (error) {
-        //   Swal.fire("Error", "Something went wrong.", `${error}`);
-        // }
+        axiosSecure
+          .post("parcel", parcelData)
+          .then((res) => {
+            if (res.data.insertedId) {
+              Swal.fire({
+                title: "Redirect to payment page!",
+                // text: "You clicked the button!",
+                icon: "success",
+              });
+              reset();
+              navigate("/dashboard/my-parcels")
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       }
     });
   };
@@ -240,9 +254,13 @@ const SendParcel = () => {
                   </label>
                   <input
                     type="text"
-                    defaultValue="Md. Alamin"
+                    defaultValue={user.displayName}
+                    {...register("senderName", { required: true })}
                     className="input input-bordered w-full focus:outline-none"
                   />
+                  {errors.senderName && (
+                    <p className="text-red-500 text-sm">Name is required</p>
+                  )}
                 </div>
                 <div>
                   <label className="label text-black">

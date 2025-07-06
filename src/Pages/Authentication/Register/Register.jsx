@@ -1,15 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router";
 import useAuth from "../../../Hooks/useAuth";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import GoogleLogin from "../GoogleLogin/GoogleLogin";
-import axios from "axios"
+import axios from "axios";
+import { FaUpload } from "react-icons/fa";
+import useAxios from "../../../Hooks/useAxios";
 // import userImg from "../../../assets/image-upload-icon.png";
 
 const Register = () => {
+  const [previewURL, setPreviewURL] = useState(null);
   const { createUser, updateUser, setUser } = useAuth();
+  const [loading, setLoading] = useState(false);
   const {
     register,
     handleSubmit,
@@ -18,36 +22,38 @@ const Register = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const axiosInstance = useAxios();
 
   const onSubmit = async (info) => {
+    setLoading(true);
     const { name, email, password } = info;
     const image = info.photo[0];
     const imgFormData = new FormData();
-    imgFormData.append('image', image)
-    const {data} = await axios.post(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`, imgFormData);
-    const imgUrl =data.data.display_url;
+    imgFormData.append("image", image);
+    const { data } = await axios.post(
+      `https://api.imgbb.com/1/upload?key=${
+        import.meta.env.VITE_IMGBB_API_KEY
+      }`,
+      imgFormData
+    );
+    const imgUrl = data.data.display_url;
     // create user
     createUser(email, password)
-      .then((result) => {
+      .then(async(result) => {
         const user = result.user;
         updateUser({ displayName: name, photoURL: imgUrl })
-          .then(() => {
+          .then( () => {
+            // set user
             setUser({
               ...user,
               displayName: name,
               photoURL: imgUrl,
             });
-            Swal.fire({
-              title: "Login!",
-              text: "User login successfully!",
-              icon: "success",
-              timer: 2000,
-            });
-            navigate(`${location.state ? location.state : "/"}`);
           })
           .catch((error) => {
             const errorMassage = error.code;
             setUser(user);
+            setLoading(false)
             toast.error(`${errorMassage}`, {
               position: "top-right",
               autoClose: 2000,
@@ -59,9 +65,30 @@ const Register = () => {
               theme: "light",
             });
           });
+          // set user on db
+            const userInfo = {
+              email: user.email,
+              role: "user",
+              created_at: new Date().toISOString(),
+              last_login: new Date().toISOString()
+            };
+
+            const userRes = await axiosInstance.post("users", userInfo);
+
+            if (userRes.data.insertedId) {
+              setLoading(false);
+              Swal.fire({
+                title: "Login!",
+                text: "User login successfully!",
+                icon: "success",
+                timer: 2000,
+              });
+              navigate(`${location.state ? location.state : "/"}`);
+            }
       })
       .catch((error) => {
         const errorMassage = error.code;
+        setLoading(false)
         toast.error(`${errorMassage}`, {
           position: "top-right",
           autoClose: 2000,
@@ -75,6 +102,25 @@ const Register = () => {
       });
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+
+    if (!validTypes.includes(file.type)) {
+      Swal.fire("Invalid Format", "Only JPG, PNG, or GIF allowed", "error");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      Swal.fire("Too Large", "File must be less than 2MB", "error");
+      return;
+    }
+
+    setPreviewURL(URL.createObjectURL(file));
+  };
+
   return (
     <div className="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl  mt-20">
       <div className="card-body">
@@ -83,17 +129,44 @@ const Register = () => {
         <form onSubmit={handleSubmit(onSubmit)}>
           <fieldset className="fieldset">
             {/* image */}
-            <label htmlFor="files" className="block text-lg font-medium">
-              Select your Profile picture
-            </label>
-            <div className="flex">
+            <label
+              htmlFor="fileInput"
+              className="w-full h-48 border border-dashed border-gray-300 bg-gray-50 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer hover:border-gray-500 transition py-9"
+            >
+              {previewURL ? (
+                <img
+                  src={previewURL}
+                  alt="Preview"
+                  className="h-full object-contain rounded"
+                />
+              ) : (
+                <>
+                  <FaUpload className="text-2xl mb-2 text-gray-500" />
+                  <p className="font-semibold text-gray-700">Upload picture</p>
+                  <p className="text-sm text-gray-500">
+                    Choose photo size &lt;{" "}
+                    <span className="font-semibold">2mb</span>
+                    <br />
+                    Format:{" "}
+                    <span className="font-semibold">JPG, PNG, or GIF</span>
+                  </p>
+                </>
+              )}
+
               <input
                 type="file"
+                id="fileInput"
                 {...register("photo", { required: true })}
-                id="files"
-                className="px-8 py-12 border-2 border-dashed border-primary rounded-md dark:text-gray-600 dark:bg-gray-100 hover:cursor-pointer"
+                accept="image/png, image/jpeg, image/gif"
+                onChange={handleFileChange}
+                // className="hidden"
               />
-            </div>
+            </label>
+            {errors.photo?.type === "required" && (
+              <p role="alert" className="text-red-500">
+                Photo is required
+              </p>
+            )}
             {/* name */}
             <label className="label">Name</label>
             <input
@@ -139,7 +212,11 @@ const Register = () => {
               </p>
             )}
             <button className="btn btn-primary text-black font-thin mt-4">
-              Register
+              {loading ? (
+                <span className="loading loading-spinner loading-xl"></span>
+              ) : (
+                "Register"
+              )}
             </button>
           </fieldset>
           <p className="mt-3">
